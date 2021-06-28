@@ -1,0 +1,16 @@
+[ALL]
+RedHat
+HP-UX
+AIX
+
+[RedHat]
+srvlinux01
+srvlinux02
+
+[HP-UX]
+srvhpux01
+srvhpux02
+
+[AIX]
+srvaix01
+srvaix01

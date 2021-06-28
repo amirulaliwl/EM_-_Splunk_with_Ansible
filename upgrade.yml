@@ -1,0 +1,113 @@
+---
+- hosts:
+   - ALL
+  gather_facts: yes
+  tasks:
+  
+  - name: check splunk directory
+  stat:
+  path: /opt/
+  register: splunk
+  
+  - name: "echo if directory already existed"
+  debug:
+  msg: "the splunk directory is already existed"
+  when: splunk.stat.exists
+  
+  - name: "create directory if not existed"
+  file:
+  path: /opt/
+  state: directory
+  mode: 0755
+  group: xssplunk
+  owner: xssplunk
+  when: splunk.stat.exists == false
+  
+  - name: splunk installation file
+  vars:
+    splunk_working_directory: '/tmp/splunk/'
+    splunk_file_RedHat: splunk_2.0_linux.tgz
+    splunk_file_HP-UX: splunk_2.0_hpux.tgz
+    splunk_file_AIX: splunk_2.0_AIX.tgz 
+  roles:
+    - common
+    
+  - name: copy over to rhel
+  copy:
+    src: /var/www/html/splunk/{{splunk_file_RedHat}}
+    dest: "{{splunk_working_directory}}"
+  when:
+    - splunk_installer_present.stat.exists == false
+    - splunk_path_present.stat.exists == false
+    - ansible_facts['distribution'] == "RedHat"
+	
+  - name: copy over to hpux
+  copy:
+    src: /var/www/html/splunk/{{splunk_file_HP-UX}}
+    dest: "{{splunk_working_directory}}"
+  when:
+    - splunk_installer_present.stat.exists == false
+    - splunk_path_present.stat.exists == false
+    - ansible_facts['distribution'] == "HP-UX"
+	
+  - name: copy over to aix
+  copy:
+    src: /var/www/html/splunk/{{splunk_file_AIX}}
+    dest: "{{splunk_working_directory}}"
+  when:
+    - splunk_installer_present.stat.exists == false
+    - splunk_path_present.stat.exists == false
+    - ansible_facts['distribution'] == "AIX"
+	
+  - name: Check if package already transferred - rhel
+  stat:
+    path: "{{splunk_working_directory}}{{splunk_file_RedHat}}"
+  register: splunk_installer_present
+  when:
+    - ansible_facts['distribution'] == "RedHat"
+	
+  - name: Check if package already transferred - hpux
+  stat:
+    path: "{{splunk_working_directory}}{{splunk_file_HP-UX}}"
+  register: splunk_installer_present
+  when:
+    - ansible_facts['distribution'] == "HP-UX"	
+	
+  - name: Check if package already transferred - aix
+  stat:
+    path: "{{splunk_working_directory}}{{splunk_file_AIX}}"
+  register: splunk_installer_present
+  when:
+    - ansible_facts['distribution'] == "AIX"
+	
+  - name: Untar Splunk Package - rhel
+  command: tar xzf {{splunk_working_directory}}{{splunk_file_RedHat}} -C /opt/splunk
+  args:
+    warn: False
+  when:
+    - splunk_path_present.stat.exists == false
+    - ansible_facts['distribution'] == "RedHat"
+	
+  - name: Untar Splunk Package - hpux
+  command: tar xzf {{splunk_working_directory}}{{splunk_file_HP-UX}} -C /opt/splunk
+  args:
+    warn: False
+  when:
+    - splunk_path_present.stat.exists == false
+    - ansible_facts['distribution'] == "HP-UX"
+	
+  - name: Untar Splunk Package - aix
+  command: tar xzf {{splunk_working_directory}}{{splunk_file_AIX}} -C /opt/splunk
+  args:
+    warn: False
+  when:
+    - splunk_path_present.stat.exists == false
+    - ansible_facts['distribution'] == "AIX"
+	
+  - name: Start Splunk
+  command: /opt/splunk/bin/splunk start --accept-license
+  
+  - name: Enable Boot Start
+  command: /opt/splunkforwarder/bin/splunk enable boot-start
+	
+  
