@@ -13,4 +13,4 @@ srvhpux02
 
 [AIX]
 srvaix01
-srvaix01
+srvaix02
